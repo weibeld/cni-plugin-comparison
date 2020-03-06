@@ -17,14 +17,21 @@ Compared CNI plugins:
 
 ## Summary table
 
-| CNI plugin | Works in cloud | Fails if you don't set a Pod network CIDR | Requires you to set a _specific_ Pod network CIDR | Respects user-defined Pod network CIDR |
-|------------|:--------------:|:--------------------------------------:|:-------------------------------------------------:|:--------------------------------------:|
-| Calico     | ❌ No          | ✅ No                                  | 🔶 Maybe (192.168.0.0/16)                         | ❌ No (uses 192.168.0.0/16             |
-| Flannel    | ✅ Yes         | ❌ Yes                                 | ❌ Yes (10.244.0.0/16)                            | ❌ No (uses 10.244.0.0/16)             |
-| Weave Net  | ✅ Yes         | ✅ No                                  | 🔶 Maybe                                          | ❌ No (uses subnets under 10.0.0.0/8)  |
-| Cilium     | ✅ Yes         | ✅ No                                  | ✅ No                                             | ✅ Yes                                 |
-| Contiv     | ❌ No          | ✅ No                                  | ❌ Yes (10.1.0.0/16)                              | ❌ No (uses 10.1.0.0/16)               |
-| Kube-router| ❌ No          | ❌ Yes                                 | ✅ No                                             | ✅ Yes                                 |
+| CNI plugin  | Works in cloud _(1)_ | Default Pod network CIDR  | Default Pod network CIDR defined in YAML _(2)_ | Works if `podCIDR` not allocated _(3)_ | Can override Pod network CIDR with kubeadm _(4)_ |
+|-------------|:--------------:|---------------------:|:------------------------------:|:--------------------------:|:-------------------------------------------------:|
+| Calico      | ❌ No          | 192.168.0.0/16       | ✅ Yes                         | ✅ Yes                     | ❌ No
+| Flannel     | ✅ Yes         | 10.244.0.0/16        | ✅ Yes                         | ❌ No                      | ❌ No
+| Weave Net   | ✅ Yes         | 10.32.0.0/12         | ❌ No                          | ✅ Yes                     | ❌ No
+| Cilium      | ✅ Yes         | 10.217.0.0/16        | ❌ No                          | ✅ Yes                     | ✅ Yes
+| Contiv      | ❌ No          | 10.1.0.0/16          | ✅ Yes                         | ✅ Yes                     | ❌ No
+| kube-router | ❌ No          | -                    | ❌ No                          | ❌ No                      | ✅ Yes
+
+Footnotes:
+
+1. If no, it usually means that the inter-node Pod communication doesn't work. That means, no messages can be sent to a Pod on a _different_ node (to a Pod on the _same_ node works). This is because the CNI plugin probably assumes direct Layer 2 connectivity between nodes, which is not the case in the cloud.
+2. If yes, the default Pod network CIDR can be customised by editing the deployment manifest of the CNI plugin.
+3. If no, the CNI plugin Pods fail to start up if the `node.spec.podCIDR` field is not set, that is, if the controller manager didn't automatically allocate Pod subnet CIDRs to the nodes.
+4. If yes, it's enough to define the Pod network CIDR by specifying it to kubeadm (which will pass it to the `--cluster-cidr` flag of [kube-controller-manager](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/); the CNI plugin will reuse the custom Pod subnet CIDRs assigned to each node. If no, this doesn't work, and the CNI plugin keeps using its default Pod network CIDR, even if a different CIDR was specified to kubeadm. More steps have to be taken to customise the Pod network CIDR, such as editing the CNI plugin deployment YAML file or binary.
 
 ## Calico
 
