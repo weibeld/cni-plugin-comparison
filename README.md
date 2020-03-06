@@ -15,6 +15,17 @@ Compared CNI plugins:
 - [Contiv](#contiv)
 - [Kube-router](#kube-router)
 
+## Summary table
+
+| CNI plugin | Works in cloud | Fails if you don't set a Pod network CIDR | Requires you to set a _specific_ Pod network CIDR | Respects user-defined Pod network CIDR |
+|------------|:--------------:|:--------------------------------------:|:-------------------------------------------------:|:--------------------------------------:|
+| Calico     | ❌ No          | ✅ No                                  | 🔶 Maybe (192.168.0.0/16)                         | ❌ No (uses 192.168.0.0/16             |
+| Flannel    | ✅ Yes         | ❌ Yes                                 | ❌ Yes (10.244.0.0/16)                            | ❌ No (uses 10.244.0.0/16)             |
+| Weave Net  | ✅ Yes         | ✅ No                                  | 🔶 Maybe                                          | ❌ No (uses subnets under 10.0.0.0/8)  |
+| Cilium     | ✅ Yes         | ✅ No                                  | ✅ No                                             | ✅ Yes                                 |
+| Contiv     | ❌ No          | ✅ No                                  | ❌ Yes (10.1.0.0/16)                              | ❌ No (uses 10.1.0.0/16)               |
+| Kube-router| ❌ No          | ❌ Yes                                 | ✅ No                                             | ✅ Yes                                 |
+
 ## Calico
 
 ### Installation
@@ -234,9 +245,15 @@ echo "vm.nr_hugepages=512" >> /etc/sysctl.conf
 service kubelet restart
 ```
 
+If you use Ansible, execute these commands on all hosts with:
+
+```bash
+ansible all -b -m shell -a 'sysctl -w vm.nr_hugepages=512; echo "vm.nr_hugepages=512" >> /etc/sysctl.conf; service kubelet restart'
+```
+
 After that, the nodes should become `Ready` and all the Pods should be scheduled and run.
 
-### Connectivities
+However, the connectivities are like this:
 
 - Pod to itself: ✅
 - Pod to Pod on same node: ✅
@@ -251,15 +268,26 @@ After that, the nodes should become `Ready` and all the Pods should be scheduled
 - Pod on host network to Pod on same node: ✅
 - Pod on host network to Pod on diferent node: ❌
 
+### Observations with a predefined arbitrary Pod network CIDR
+
+When using an aribrary Pod network CIDR (e.g. 200.200.0.0/16), the connectivities are like above
+
+### Observations with using 10.1.0.0/16 as the Pod network CIDR
+
+According to the [documentation](https://github.com/contiv/vpp/blob/master/docs/setup/MANUAL_INSTALL.md#initializing-your-master), 10.1.0.0/16 must be used for the Pod network CIDR with kubeadm.
+
+However, if using this Pod network CIDR, the connectivities are still like above.
 
 ### Notes
 
 - Does not require pre-existing Pod subnet CIDR allocation to nodes
+- If you specify a Pod network CIDR, Contiv does **not** use it. It uses the Pod network CIDR 10.1.0.0/16 instead.
+  - This is hardcoded in the `contiv-vpp.yaml` file
 - Deploys a `contiv-vswitch` Pod to each node as well as a `contiv-ksr`, `contiv-etcd`, and `contiv-crd` Pod to the master node
 - Creates a single route for the whole Pod network on each node to a `vpp1` network interface
-- This network interface seem to be a FD.io/VPP (Vector Packet Processor) vSwitch, which is a fast, scalable layer 2-4 multi-platform network stack.
-- See [Contiv/VPP overview](https://fdio-vpp.readthedocs.io/en/latest/usecases/contiv/K8s_Overview.html)
-- The way the VPP swithc connects nodes seems to be similar to Calico, that is, it doesn't work by default in a cloud environment
+  - This network interface seem to be a FD.io/VPP (Vector Packet Processor) vSwitch, which is a fast, scalable layer 2-4 multi-platform network stack.
+  - See [Contiv/VPP overview](https://fdio-vpp.readthedocs.io/en/latest/usecases/contiv/K8s_Overview.html)
+  - The way the VPP switch connects nodes seems to be similar to Calico, that is, it doesn't work by default in a cloud environment
 
 ## Kube-router
 
@@ -271,6 +299,38 @@ kubectl apply -f https://raw.githubusercontent.com/cloudnativelabs/kube-router/m
 
 See [documentation](https://github.com/cloudnativelabs/kube-router/blob/master/docs/kubeadm.md#kube-router-providing-pod-networking-and-network-policy).
 
-### Connectivities
+### First observations
+
+Upon installation, the nodes become `Ready`, the `coredns` Pods are stuck in `ContainerCreating`, and the `kube-router` Pods keep crashing with a log output of:
+
+```
+Failed to get pod CIDR from node spec. kube-router relies on kube-controller-manager to allocate pod CIDR for the node or an annotation `kube-router.io/pod-cidr`
+```
+
+If you try to fix it by adding a `node.spec.podCIDR` field to all nodes (e.g. with `kubectl edit`), all Pods start running and new Pods also start up correctly and get IP addresses from the assigned Pod subnet CIDRs. However, the connectivities don't work:
+
+- Pod to itself: ✅
+- Pod to Pod on same node: ✅
+- Pod to own node: ✅
+- Pod to Pod on different node: ❌
+- Pod to different node: ❌
+- Pod to Service IP address: ✅ (if backend Pod is on same node as client Pod)
+- Pod to Service DNS name: ❌
+- DNS lookup: ❌
+- Pod on host network to own node: ✅
+- Pod on host network to different node: ✅
+- Pod on host network to Pod on same node: ✅
+- Pod on host network to Pod on diferent node: ❌
+
+### Observations with an arbitrary predefined Pod network CIDR
+
+All Pods start up and run correctly (however, `coredns` Pods are not ready). Pods in the Pod network get IP addresses from the allocated Pod subnet CIDRs.
+
+However, the connectivities are exactly like above.
 
 ### Notes
+
+- Creates a `kube-router` Pod on each node
+- Requires pre-allocated Pod subnet CIDRs for each node (otherwise, fails to start up)
+  - If there are pre-allocated Pod subnet CIDRs, it uses them
+- Creates routes for each Pod subnet on each node. The routes for a Pod subnet on a different node go via a `tun` virtual network interface.
