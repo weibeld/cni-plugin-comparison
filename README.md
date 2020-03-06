@@ -6,14 +6,15 @@ Scenario:
 2. Install a CNI plugin with default settings in the cluster
 3. Check the network connectivities in the cluster
 
-Compared CNI plugins:
+Compared CNI plugins (with number of GitHub stars in March 2020):
 
-- [Calico](#calico)
-- [Flannel](#flannel)
-- [Weave Net](#weave-net)
-- [Cilium](#cilium)
-- [Contiv](#contiv)
-- [Kube-router](#kube-router)
+- [Weave Net](https://github.com/weaveworks/weave): 5.8k
+- [Flannel](https://github.com/coreos/flannel): 5.1k
+- [Cilium](https://github.com/cilium/cilium): 5.1k
+- [Calico](https://github.com/projectcalico/calico). 1.6k
+- [kube-router](https://github.com/cloudnativelabs/kube-router): 1.4k
+- [Kube-OVN](https://github.com/alauda/kube-ovn): 509
+- [Contiv](https://github.com/contiv/vpp): 146
 
 ## Summary table
 
@@ -32,6 +33,15 @@ Footnotes:
 2. If yes, the default Pod network CIDR can be customised by editing the deployment manifest of the CNI plugin.
 3. If no, the CNI plugin Pods fail to start up if the `node.spec.podCIDR` field is not set, that is, if the controller manager didn't automatically allocate Pod subnet CIDRs to the nodes.
 4. If yes, it's enough to define the Pod network CIDR by specifying it to kubeadm (which will pass it to the `--cluster-cidr` flag of [kube-controller-manager](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/); the CNI plugin will reuse the custom Pod subnet CIDRs assigned to each node. If no, this doesn't work, and the CNI plugin keeps using its default Pod network CIDR, even if a different CIDR was specified to kubeadm. More steps have to be taken to customise the Pod network CIDR, such as editing the CNI plugin deployment YAML file or binary.
+
+**Links to sections:**
+
+- [Calico](#calico)
+- [Flannel](#flannel)
+- [Weave Net](#weave-net)
+- [Cilium](#cilium)
+- [Contiv](#contiv)
+- [Kube-router](#kube-router)
 
 ## Calico
 
