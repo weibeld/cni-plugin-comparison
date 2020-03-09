@@ -351,3 +351,20 @@ However, the connectivities are exactly like above.
 - Requires pre-allocated Pod subnet CIDRs for each node (otherwise, fails to start up)
   - If there are pre-allocated Pod subnet CIDRs, it uses them
 - Creates routes for each Pod subnet on each node. The routes for a Pod subnet on a different node go via a `tun` virtual network interface.
+
+## Notes
+
+There are two different types of CNI plugins, encapsulated and unencapsulated:
+
+- Encapsulated: wrap the Pod network packets into native host network packets and send them between hosts like normal host network packets. All the Pod networking logic is hidden in the CNI plugin agent on each node and the hosts are unaware of any Pod networking.
+- Unencapsulated: the hosts and network infrastructure are directly configured to handle and route Pod network packets.
+
+Unencapsulated approaches need to integrate with the underlying infrastructure, i.e. they must be targeted at a specific infrastructure. Most are targeted traditional networks with direct Layer 2 connectivity between nodes. These CNI plugins don't work in cloud environments like GCP. However, there are some unencapsulated approaches that are targeted at specific cloud environments, such as the GCE backend for Flannel.
+
+Encapsulated approaches work on all infrastructure, including cloud environments, because they masquerade cross-node Pod communication as normal host-to-host communication.
+
+So that's the reason that the default modes of Flannel, Weave Net, and Cilium work on GCP, but Calico, Contiv, and kube-router don't.
+
+So, basically, if your cluster is in the cloud, you need to choose an encapsulated CNI plugin, or an unencapsulated that is targeted at this specific cloud.
+
+The advantage of encapsulated approaches is that it works on all infrastructure and doesn't need to modify it. The advantage of unencapsulated approaches is that it has less overhead and integrates better with existing debugging tools as there's no additional layer of abstraction.
