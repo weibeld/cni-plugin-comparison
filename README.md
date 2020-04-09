@@ -142,6 +142,8 @@ However, this doesn't make it work, as shown in the connectivities:
 
 ### Observations when specifying an arbitrary Pod network CIDR
 
+**UPDATE (2020-04-09):** when creating a cluster with kubeadm this seems to work as expected. That is, all Pods get ready and they get an IP address from the custom Pod network CIDR range (e.g. 200.200.0.0/16).
+
 When using an arbitrary Pod network CIDR (e.g. 200.200.0.0/16) at cluster creation time, the following happens.
 
 > The Pod network CIDR can be specified in the `networking.podSubnet` field in the `kubeadm init` config file or the `--pod-network-cidr` flag of `kubeadm init`. Kubernetes will then automatically assign a Pod subnet CIDR to each node.
