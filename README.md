@@ -45,6 +45,8 @@ Footnotes:
 
 ## Calico
 
+Unencapsulated, supports NetworkPolicies.
+
 ### Installation
 
 ```bash
@@ -75,6 +77,8 @@ See [documentation](https://docs.projectcalico.org/getting-started/kubernetes/qu
 - CoreDNS Pods are runnig on master node, but Pods can't do DNS lookups because Pod-to-Pod communication across nodes doesn't work
 
 ## Flannel
+
+Encapsulated, does not support NetworkPolicies.
 
 ### Installation
 
