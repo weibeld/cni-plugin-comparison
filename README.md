@@ -142,7 +142,7 @@ However, this doesn't make it work, as shown in the connectivities:
 
 ### Observations when specifying an arbitrary Pod network CIDR
 
-**UPDATE (2020-04-09):** when creating a cluster with kubeadm this seems to work as expected. That is, all Pods get ready and they get an IP address from the custom Pod network CIDR range (e.g. 200.200.0.0/16).
+**UPDATE (2020-04-09):** when creating a cluster with kubeadm (v1.18), all Pods get `Ready` (CoreDNS and workload Pods) and get IP addresses from the custom range (e.g. 200.200.0.0/16). However, the connectivities don't work (tested on a single-node cluster: Pod can only ping itself and the node, but not any other Pods, DNS resolution doesn't work). When using 10.244.0.0/16, everything works.
 
 When using an arbitrary Pod network CIDR (e.g. 200.200.0.0/16) at cluster creation time, the following happens.
 
