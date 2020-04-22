@@ -1,0 +1,20 @@
+- CNI plugins to compare (projects with more than 1k stars on GitHub)
+  - Weave Net (5.8k)
+  - Flannel (5.1k)
+  - Cilium (5.1k)
+  - Calico (1.6k)
+  - kube-router (1.4k)
+- Encapsulated/unencapsulated
+  - If encapsualated: encapsulation mode (VXLAN, IPIP, etc.)
+- Network policies
+- Encryption
+- Auto-discover MTU
+- Storage (using own storage/using K8s etcd)
+- Deployment mode (DaemonSet, other Pods, ...)
+- Deployment command
+- Automatic Pod CIDR allocation
+   - Ignored/used if enabled/required/requred with specific Pod network CIDR
+- Configuration options
+- Configuration method (ConfigMap, env variables, ...)
+- Route distribution (BGP, ...)
+- Service networking
