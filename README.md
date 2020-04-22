@@ -45,6 +45,8 @@ Footnotes:
 
 ## Calico
 
+Unencapsulated, supports NetworkPolicies.
+
 ### Installation
 
 ```bash
@@ -75,6 +77,8 @@ See [documentation](https://docs.projectcalico.org/getting-started/kubernetes/qu
 - CoreDNS Pods are runnig on master node, but Pods can't do DNS lookups because Pod-to-Pod communication across nodes doesn't work
 
 ## Flannel
+
+Encapsulated, does not support NetworkPolicies.
 
 ### Installation
 
@@ -141,6 +145,8 @@ However, this doesn't make it work, as shown in the connectivities:
 - Pod on host network to Pod on diferent node: ❌
 
 ### Observations when specifying an arbitrary Pod network CIDR
+
+**UPDATE (2020-04-09):** when creating a cluster with kubeadm (v1.18), all Pods get `Ready` (CoreDNS and workload Pods) and get IP addresses from the custom range (e.g. 200.200.0.0/16). However, the connectivities don't work (tested on a single-node cluster: Pod can only ping itself and the node, but not any other Pods, DNS resolution doesn't work). When using 10.244.0.0/16, everything works.
 
 When using an arbitrary Pod network CIDR (e.g. 200.200.0.0/16) at cluster creation time, the following happens.
 
