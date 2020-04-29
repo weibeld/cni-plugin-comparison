@@ -148,15 +148,15 @@ However, this doesn't make it work, as shown in the connectivities:
 
 ### Observations when specifying an arbitrary Pod network CIDR
 
-> **UPDATE (2020-04-09):** when creating a cluster with kubeadm (v1.18), all Pods get `Ready` (CoreDNS and workload Pods) and get IP addresses from the custom range (e.g. 200.200.0.0/16). However, the connectivities don't work (tested on a single-node cluster: Pod can only ping itself and the node, but not any other Pods, DNS resolution doesn't work). When using 10.244.0.0/16, everything works.
+> **EDIT 2020-04-29:** confirm this behaviour on a three-node cluster on AWS created with [terraform-kubeadm-aws](https://github.com/weibeld/terraform-kubeadm-aws) (Kubernetes 1.18).
 
 When using an arbitrary Pod network CIDR (e.g. 200.200.0.0/16) at cluster creation time, the following happens.
 
 > The Pod network CIDR can be specified in the `networking.podSubnet` field in the `kubeadm init` config file or the `--pod-network-cidr` flag of `kubeadm init`. Kubernetes will then automatically assign a Pod subnet CIDR to each node.
 
-All nodes are `Ready`, all Flannel Pods run, the `coredns` Pods get IP addreses and run, but are not ready.
+All nodes get `Ready`, all Flannel Pods run, the `coredns` Pods get IP addreses from the configured Pod network range and run, but are not ready (`0/1`).
 
-When creating new workload Pods, they also get IP addresses and run, however, the connectivities are exactly as above when no Pod network CIDR is specified at all.
+When creating new workload Pods, they also get IP addresses from the configured Pod network range and run, however, the connectivities are exactly as above when no Pod network CIDR is specified at all.
 
 ### Observations when specifying 10.244.0.0/16 as the Pod network CIDR
 
