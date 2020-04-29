@@ -90,7 +90,7 @@ See [documentation](https://github.com/coreos/flannel/#deploying-flannel-manuall
 
 ### First observations
 
-> **EDIT 2020-04-29:** confirm this behaviour on a three-node cluster on AWS created with [terraform-kubeadm-aws](https://github.com/weibeld/terraform-kubeadm-aws).
+> **EDIT 2020-04-29:** confirm this behaviour on a three-node cluster on AWS created with [terraform-kubeadm-aws](https://github.com/weibeld/terraform-kubeadm-aws) (Kubernetes 1.18).
 
 Nodes become `Ready`. However, the `kube-flannel-ds` Pods on each node are in a run-crash loop. The `coredns` Pods are stuck in `ContainerCreating`.
 
