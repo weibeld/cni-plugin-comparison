@@ -90,6 +90,8 @@ See [documentation](https://github.com/coreos/flannel/#deploying-flannel-manuall
 
 ### First observations
 
+> **EDIT 2020-04-29:** confirm this behaviour on a three-node cluster on AWS created with [terraform-kubeadm-aws](https://github.com/weibeld/terraform-kubeadm-aws).
+
 Nodes become `Ready`. However, the `kube-flannel-ds` Pods on each node are in a run-crash loop. The `coredns` Pods are stuck in `ContainerCreating`.
 
 The `kube-flannel-ds` Pods report the following error message in their log output:
@@ -146,7 +148,7 @@ However, this doesn't make it work, as shown in the connectivities:
 
 ### Observations when specifying an arbitrary Pod network CIDR
 
-**UPDATE (2020-04-09):** when creating a cluster with kubeadm (v1.18), all Pods get `Ready` (CoreDNS and workload Pods) and get IP addresses from the custom range (e.g. 200.200.0.0/16). However, the connectivities don't work (tested on a single-node cluster: Pod can only ping itself and the node, but not any other Pods, DNS resolution doesn't work). When using 10.244.0.0/16, everything works.
+> **UPDATE (2020-04-09):** when creating a cluster with kubeadm (v1.18), all Pods get `Ready` (CoreDNS and workload Pods) and get IP addresses from the custom range (e.g. 200.200.0.0/16). However, the connectivities don't work (tested on a single-node cluster: Pod can only ping itself and the node, but not any other Pods, DNS resolution doesn't work). When using 10.244.0.0/16, everything works.
 
 When using an arbitrary Pod network CIDR (e.g. 200.200.0.0/16) at cluster creation time, the following happens.
 
